@@ -9,9 +9,9 @@ from datetime import datetime  # datetime 라이브러리(기본 제공)에서 d
 import os  # os = 탐색기 속 파일들 사용할 때 쓰는 라이브러리
 import sys  # sys = 컴퓨터의 시스템을 조작할 때 쓰는 라이브러리(control outside of Python)
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from auth import MY_ID, MY_PW
-# from mailPart import mailing ## 메일을 보내는 모듈을 추가했습니다.
-# from tableMaker import tableMaker ## 새로운 글들을 이쁜 표 형태의 HTML로 만들어주는 모듈을 추가했습니다.
+from auth import MY_ID, MY_PW, GMAIL_ID, GMAIL_PW, TO_1, TO_2
+from mailPart import mailing ## 메일을 보내는 모듈을 추가했습니다.
+from tableMaker import tableMaker ## 새로운 글들을 이쁜 표 형태의 HTML로 만들어주는 모듈을 추가했습니다.
 
 
 # -------------- 상수 선언
@@ -109,13 +109,13 @@ class myBoardCrawler():
             for each in newsList:
                 # 리스트의 각 링크에 대해서 도메인 주소를 붙여줍니다. 불필요한 공백들(\n, \t)도 없애버립니다.
                 upgradeNews = each.get_attribute('outerHTML').replace("\n", "").replace(
-                    "\t", "").replace("<hr>", "").replace('href="', 'href="' + abs_url)
+                    "\t", "").replace("<hr>", "").replace('href="', 'href="' + abs_url).replace('&amp;','&')
                 # append는 리스트에 원소를 밀어넣는 메소드예요.
                 upgradeNewsList.append(upgradeNews)
         else:  # abs_url이 따로 명시되지 않았다면?
             for each in newsList:
                 upgradeNews = each.get_attribute('outerHTML').replace("\n", "").replace(
-                    "\t", "").replace("<hr>", "")  # 불필요한 공백들(\n, \t)만 없애면 되겠지요?
+                    "\t", "").replace("<hr>", "").replace('&amp;', '&')  # 불필요한 공백들(\n, \t)만 없애면 되겠지요?
                 upgradeNewsList.append(upgradeNews)  # 하나씩 넣는 과정은 똑같이...!
         # 잘 되었는지 확인해볼까요?
         for each in upgradeNewsList:
@@ -163,10 +163,10 @@ crawler_machine = myBoardCrawler()  # 클래스를 통해 객체를 하나 생�
 # ------------------↓↓↓ YOUR SITES HERE ↓↓↓------------------
 
 # sample 1 (기본적인 table 형태의 게시판 탐색 + a href가 상대경로)
-# crawler_machine.crawl(site="http://chemeng.sogang.ac.kr/kor/sub/05_04.php",
-#                     name="화공생명공학 공지사항",
-#                     board='#board_list > div.board_list > table > tbody a',
-#                     abs_url="http://chemeng.sogang.ac.kr")
+crawler_machine.crawl(site="http://chemeng.sogang.ac.kr/kor/sub/05_04.php",
+                    name="화공생명공학 공지사항",
+                    board='#board_list > div.board_list > table > tbody a',
+                    abs_url="http://chemeng.sogang.ac.kr")
 
 # sample 2 (a href가 절대경로 + board 찾기가 쉽지 않음)
 # crawler_machine.crawl(site="http://www.career.co.kr/recruit/default.asp?tab_gubun=1",
@@ -207,18 +207,18 @@ for title in allNews.keys():
 crawler_machine.quit()
 
 # 만약 새로 작성된 글이 존재한다면, 1. 이쁘게 가공해서 2. 메일로 보내야겠죠?
-# if allNews != []:
+if allNews != []:
 # tableMaker는 세 개의 파라미터(parameter)를 받습니다. 새로운 뉴스들, 타이틀, 제작자 정보!
 # tableMaker가 반환하는 값은 하나의 긴 string입니다. 이것을 htmlNews에 넣은 상태예요.
-# htmlNews = tableMaker(allNews, "나만의 데일리 뉴스", "made by Moon")
+    htmlNews = tableMaker(allNews, "Focus Today", "made by fullyalive")
 
 # 메일을 받을 사람을 적습니다. 본인 이메일을 적으시면 되고,
 # 콤마(,)로 구분해서 여러 사람에게 보낼 수 있어요.
-# mail_to = ["roeniss2@gmail.com", "pythoncrawltest@gmail.com"]
+    mail_to = [TO_1, TO_2]
 
 # 메일을 보내도록 도와주는 mailing은 다섯개의 파라미터를 받습니다.
 # 순서대로, 메일을 보내는 계정의 id, password, 받을 사람(to), 메일 제목, 메일 내용이예요.
-# mailing(GMAIL_ID, GMAIL_PW, mail_to, "나만의 데일리 뉴스 :: {}".format(str(datetime.now().strftime('%m/%d'))), htmlNews)
+    mailing(GMAIL_ID, GMAIL_PW, mail_to, "나만의 데일리 뉴스 :: {}".format(str(datetime.now().strftime('%m/%d'))), htmlNews)
 
 # 마무리 멘트까지...! 진짜 끝~~~!
-# print("모든 작업이 종료되었습니다. 크롤링한 게시판 수 : {}, 새로운 글이 있는 게시판 수 : {}".format(totalPage, len(allNews.keys())))
+print("모든 작업이 종료되었습니다. 크롤링한 게시판 수 : {}, 새로운 글이 있는 게시판 수 : {}".format(totalPage, len(allNews.keys())))
